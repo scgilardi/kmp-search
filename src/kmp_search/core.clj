@@ -12,18 +12,19 @@
 
 (defn matcher [^bytes pattern]
   (let [length (alength pattern)
-        failure (long-array length)
-        compute-failure (fn [[i j] b]
-                          (let [j (loop [j j p (aget pattern j)]
-                                    (if (and (pos? j) (not= p b))
-                                      (recur (aget failure (dec j))
-                                             (aget pattern j))
-                                      (if (= p b)
-                                        (inc j)
-                                        j)))]
-                            (aset-long failure i j)
-                            [(inc i) j]))
-        _ (reduce compute-failure [1 0] (drop 1 pattern))]
+        failure (long-array length)]
+    (loop [i 1 j 0]
+      (when (< i length)
+        (let [b (aget pattern i)
+              ^long j (loop [j j]
+                        (let [p (aget pattern j)]
+                          (if (and (pos? j) (not= p b))
+                            (recur (aget failure (dec j)))
+                            (if (= p b)
+                              (inc j)
+                              j))))]
+          (aset-long failure i j)
+          (recur (inc i) j))))
     {:pattern pattern
      :length length
      :failure failure
