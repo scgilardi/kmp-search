@@ -10,7 +10,10 @@
     portion of a larger search target."
   (:require [clojure.java.io :as io]))
 
+(def byte-array-class (Class/forName "[B"))
+
 (defn matcher [^bytes pattern]
+  {:pre [(isa? byte-array-class (class pattern))]}
   (let [length (alength pattern)
         failure (long-array length)]
     (loop [i 1 j 0]
@@ -39,22 +42,25 @@
   ([matcher bytes]
      (search-bytes matcher bytes (alength bytes)))
   ([matcher ^bytes bytes ^long limit]
+     {:pre [(isa? byte-array-class (class bytes))]}
      (let [{:keys [^bytes pattern ^long length ^longs failure state]} matcher
            [offset i j] state
-           [i j] (loop [i i ^long j j]
-                   (if (= i limit)
-                     [i j]
-                     (let [b (aget bytes i)
-                           ^long j (loop [j j]
-                                     (let [p (aget pattern j)]
-                                       (if (and (pos? j) (not= p b))
-                                         (recur (aget failure (dec j)))
-                                         (if (= p b)
-                                           (inc j)
-                                           j))))]
-                       (if (= j length)
-                         [(inc i) j]
-                         (recur (inc i) j)))))]
+           [i j] (if (= j length)
+                   [i j]
+                   (loop [i i ^long j j]
+                     (if (= i limit)
+                       [i j]
+                       (let [b (aget bytes i)
+                             ^long j (loop [j j]
+                                       (let [p (aget pattern j)]
+                                         (if (and (pos? j) (not= p b))
+                                           (recur (aget failure (dec j)))
+                                           (if (= p b)
+                                             (inc j)
+                                             j))))]
+                         (if (= j length)
+                           [(inc i) j]
+                           (recur (inc i) j))))))]
        (if (= j length)
          [(- (+ offset i) length) (assoc matcher :state [offset i 0])]
          [nil (assoc matcher :state [(+ offset i) 0 j])]))))
