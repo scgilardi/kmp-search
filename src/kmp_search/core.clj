@@ -41,7 +41,7 @@
   ([matcher ^bytes bytes ^long limit]
      (let [{:keys [^bytes pattern ^long length ^longs failure state]} matcher
            [offset i j] state
-           [i j] (loop [i 0 ^long j j]
+           [i j] (loop [i i ^long j j]
                    (if (= i limit)
                      [i j]
                      (let [b (aget bytes i)
@@ -54,11 +54,10 @@
                                            j))))]
                        (if (= j length)
                          [(inc i) j]
-                         (recur (inc i) j)))))
-           offset (+ offset i)]
+                         (recur (inc i) j)))))]
        (if (= j length)
-         [(- offset length) (assoc matcher :state [offset i 0])]
-         [nil (assoc matcher :state [offset 0 j])]))))
+         [(- (+ offset i) length) (assoc matcher :state [offset i 0])]
+         [nil (assoc matcher :state [(+ offset i) 0 j])]))))
 
 (defn search-file
   "returns the index of the first occurreence of a byte pattern in a

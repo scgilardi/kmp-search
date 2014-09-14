@@ -9,6 +9,18 @@
       (reduced [index matcher])
       [index matcher])))
 
+(defn all-matches
+  [matcher byte-arrays]
+  (loop [matcher matcher
+         byte-arrays byte-arrays
+         matches []]
+    (if byte-arrays
+      (let [[index matcher] (search-bytes matcher (first byte-arrays))]
+        (if index
+          (recur matcher byte-arrays (conj matches index))
+          (recur matcher (next byte-arrays) matches)))
+      matches)))
+
 (defn the-bytes [x]
   (.getBytes x))
 
@@ -36,4 +48,10 @@
            "abc" 0
            "1abc" 1
            "ababc" 2
-           ["a" ""  "b" "a" "b" "c"] 2))))
+           ["ab" ""  "bd" "ab" "c"] 4)))
+  (testing "all-matches"
+    (let [m (matcher (the-bytes "abc"))]
+      (are [x y] (= (all-matches m (map the-bytes x)) y)
+           ["abc"] [0]
+           ["abcabcabc"] [0 3 6]
+           ["ab" "ca" "bc" "ab" "ca"] [0 3 6]))))
