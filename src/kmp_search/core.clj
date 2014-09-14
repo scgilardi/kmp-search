@@ -1,59 +1,73 @@
 (ns kmp-search.core
-  "searches a byte array for a byte pattern")
+  "functions to search bytes for a byte pattern
 
-(defn match-length
-  [^bytes pattern ^longs failures ^long match-length ^long b]
-  (let [match-length (loop [j match-length]
-                       (if (and (> j 0) (not= (aget pattern j) b))
-                         (recur (aget failures (dec j)))
-                         j))]
-    (if (= (aget pattern match-length) b)
-      (inc match-length)
-      match-length)))
+  - create a matcher with the bytes of the pattern
+
+  - call a search function with the matcher and the bytes to be searched
+
+  - search-bytes returns an updated matcher which carries enough state
+    to allow matching across the boundary if the byte-array is a
+    portion of a larger search target."
+  (:require [clojure.java.io :as io]))
 
 (defn matcher [^bytes pattern]
   (let [length (alength pattern)
-        failures (long-array length)
+        failure (long-array length)
         compute-failure (fn [[i j] b]
-                          (let [j (match-length pattern failures j b)]
-                            (aset-long failures i j)
+                          (let [j (loop [j j]
+                                    (let [p (aget pattern j)]
+                                      (if (and (pos? j) (not= p b))
+                                        (recur (aget failure (dec j)))
+                                        (if (= p b)
+                                          (inc j)
+                                          j))))]
+                            (aset-long failure i j)
                             [(inc i) j]))
         _ (reduce compute-failure [1 0] (drop 1 pattern))]
     {:pattern pattern
      :length length
-     :failures failures
+     :failure failure
      :state [0 0 0]}))
 
-(defn reset [matcher]
-  (assoc matcher :state [0 0 0]))
+(defn search-bytes
+  "searches some or all of a byte array. returns the index of the
+  first match (or nil if no match is found) and an updated matcher
+  that can be used to continue the search in a subsequent call.
+  matches within byte arrays or across byte array boundaries will
+  be found."
+  ([matcher bytes]
+     (search-bytes matcher bytes (alength bytes)))
+  ([matcher ^bytes bytes ^long limit]
+     (let [{:keys [^bytes pattern ^long length ^longs failure state]} matcher
+           [offset i j] state
+           [i j] (loop [i 0 ^long j j]
+                   (if (= i limit)
+                     [i j]
+                     (let [b (aget bytes i)
+                           ^long j (loop [j j]
+                                     (let [p (aget pattern j)]
+                                       (if (and (pos? j) (not= p b))
+                                         (recur (aget failure (dec j)))
+                                         (if (= p b)
+                                           (inc j)
+                                           j))))]
+                       (if (= j length)
+                         [(inc i) j]
+                         (recur (inc i) j)))))
+           offset (+ offset i)]
+       (if (= j length)
+         [(- offset length) (assoc matcher :state [offset i 0])]
+         [nil (assoc matcher :state [offset 0 j])]))))
 
-(defn index-of
-  "returns [matcher index]"
-  [matcher ^bytes data]
-  (let [{:keys [pattern ^long length failures state]} matcher
-        [offset i j] state
-        limit (alength data)
-        [i j] (loop [i 0 ^long j j]
-                (if (= i limit)
-                  [i j]
-                  (let [b (aget data i)
-                        ^long j (loop [j j]
-                                  (if (and (pos? j) (not= (aget pattern j) b))
-                                    (recur (aget failures (dec j)))
-                                    (if (= (aget pattern j) b)
-                                      (inc j)
-                                      j)))]
-                    (if (= j length)
-                      [(inc i) j]
-                      (recur (inc i) j)))))
-        offset (+ offset i)]
-    (if (= j length)
-      [(assoc matcher :state [offset i 0]) (- offset length)]
-      [(assoc matcher :state [offset 0 j]) -1])))
-
-(defn index-of-reducer
-  [[matcher _] data]
-  (let [[matcher index] (index-of matcher data)]
-    (if (neg? index)
-      [matcher index]
-      (reduced [matcher index]))))
+(defn search-file
+  "returns the index of the first occurreence of a byte pattern in a
+  file or nil if the pattern is not present."
+  [^bytes pattern file & {:keys [buffer-size] :or {buffer-size 1024}}]
+  (let [bytes (byte-array buffer-size)]
+    (with-open [ins (io/input-stream file)]
+      (loop [m (matcher pattern)
+             read-count (.read ins bytes)]
+        (if-not (neg? read-count)
+          (let [[index m] (search-bytes m bytes read-count)]
+            (or index
+                (recur m (.read ins bytes)))))))))
