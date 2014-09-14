@@ -32,13 +32,20 @@
   [matcher ^bytes data]
   (let [{:keys [pattern length failures state]} matcher
         [offset i j] state
-        find-match (fn [[i j] b]
-                     (let [j (match-length pattern failures j b)
-                           match [(inc i) j]]
-                       (if (= j length)
-                         (reduced match)
-                         match)))
-        [i j] (reduce find-match [i j] data)
+        limit (alength data)
+        [i j] (loop [i 0 j j]
+                (if (= i limit)
+                  [i j]
+                  (let [b (aget data i)
+                        j (loop [j j]
+                            (if (and (pos? j) (not= (aget pattern j) b))
+                              (recur (aget failures (dec j)))
+                              (if (= (aget pattern j) b)
+                                (inc j)
+                                j)))]
+                    (if (= j length)
+                      [(inc i) j]
+                      (recur (inc i) j)))))
         offset (+ offset i)]
     (if (= j length)
       [(assoc matcher :state [offset i 0]) (- offset length)]
@@ -50,4 +57,3 @@
     (if (neg? index)
       [matcher index]
       (reduced [matcher index]))))
-
