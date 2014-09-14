@@ -14,13 +14,13 @@
   (let [length (alength pattern)
         failure (long-array length)
         compute-failure (fn [[i j] b]
-                          (let [j (loop [j j]
-                                    (let [p (aget pattern j)]
-                                      (if (and (pos? j) (not= p b))
-                                        (recur (aget failure (dec j)))
-                                        (if (= p b)
-                                          (inc j)
-                                          j))))]
+                          (let [j (loop [j j p (aget pattern j)]
+                                    (if (and (pos? j) (not= p b))
+                                      (recur (aget failure (dec j))
+                                             (aget pattern j))
+                                      (if (= p b)
+                                        (inc j)
+                                        j)))]
                             (aset-long failure i j)
                             [(inc i) j]))
         _ (reduce compute-failure [1 0] (drop 1 pattern))]
