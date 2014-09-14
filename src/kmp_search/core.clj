@@ -30,19 +30,19 @@
 (defn index-of
   "returns [matcher index]"
   [matcher ^bytes data]
-  (let [{:keys [pattern length failures state]} matcher
+  (let [{:keys [pattern ^long length failures state]} matcher
         [offset i j] state
         limit (alength data)
-        [i j] (loop [i 0 j j]
+        [i j] (loop [i 0 ^long j j]
                 (if (= i limit)
                   [i j]
                   (let [b (aget data i)
-                        j (loop [j j]
-                            (if (and (pos? j) (not= (aget pattern j) b))
-                              (recur (aget failures (dec j)))
-                              (if (= (aget pattern j) b)
-                                (inc j)
-                                j)))]
+                        ^long j (loop [j j]
+                                  (if (and (pos? j) (not= (aget pattern j) b))
+                                    (recur (aget failures (dec j)))
+                                    (if (= (aget pattern j) b)
+                                      (inc j)
+                                      j)))]
                     (if (= j length)
                       [(inc i) j]
                       (recur (inc i) j)))))
