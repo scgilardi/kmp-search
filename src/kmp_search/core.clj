@@ -18,18 +18,16 @@
   {:pre [(isa? byte-array-class (class pattern))]}
   (let [length (alength pattern)
         failure (long-array (inc length))]
-    (aset-long failure 0 -1)
     (loop [i 0 j -1]
+      (aset-long failure i j)
       (when (< i length)
         (let [b (aget pattern i)
               ^long j (loop [j j]
                         (if (and (not (neg? j))
                                  (not= (aget pattern j) b))
                           (recur (aget failure j))
-                          (inc j)))
-              i (inc i)]
-          (aset-long failure i j)
-          (recur i j))))
+                          j))]
+          (recur (inc i) (inc j)))))
     {:pattern pattern
      :length length
      :failure failure
@@ -55,9 +53,8 @@
                                      (if (and (not (neg? j))
                                               (not= (aget pattern j) b))
                                        (recur (aget failure j))
-                                       (inc j)))
-                           i (inc i)]
-                       (recur i j))))]
+                                       j))]
+                       (recur (inc i) (inc j)))))]
        (if (= j length)
          [(+ offset (- i j)) (assoc matcher :state [offset i (aget failure j)])]
          [nil (assoc matcher :state [(+ offset i) 0 j])]))))
