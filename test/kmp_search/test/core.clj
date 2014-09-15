@@ -10,8 +10,8 @@
       [index matcher])))
 
 (defn all-matches
-  [matcher byte-arrays]
-  (loop [matcher matcher
+  [pattern byte-arrays]
+  (loop [matcher (matcher pattern)
          byte-arrays byte-arrays
          matches []]
     (if byte-arrays
@@ -53,12 +53,11 @@
            "ababc" 2
            ["ab" ""  "bd" "ab" "c"] 4)))
   (testing "all-matches"
-    (let [m (matcher (the-bytes "abc"))]
-      (are [x y] (= (all-matches m (map the-bytes x)) y)
-           ["abc"] [0]
-           ["abcabcabc"] [0 3 6]
-           ["ab" "ca" "bc" "ab" "ca"] [0 3 6]
-           ["ab" "ca" "bc" "ab" "cabraca" "abacab" "collate"] [0 3 6 19])))
+    (are [p x y] (= (all-matches (the-bytes p) (map the-bytes x)) y)
+         "abc" ["abc"] [0]
+         "abc" ["abcabcabc"] [0 3 6]
+         "abc" ["ab" "ca" "bc" "ab" "ca"] [0 3 6]
+         "abc" ["ab" "ca" "bc" "ab" "cabraca" "abacab" "collate"] [0 3 6 19]))
   (testing "matching empty"
     (let [m (matcher (the-bytes ""))]
       (are [x y] (= (test-index m x) y)
@@ -69,6 +68,7 @@
            "ababc" 0
            ["ab" ""  "bd" "ab" "c"] 0)))
   (testing "matching empty"
-    (let [m (matcher (the-bytes "aa"))]
-      (are [x y] (= (all-matches m (map the-bytes x)) y)
-           ["aaaaaaaaaaaaa"] [0 1 2 3 4 5 6 7 8 9 10 11]))))
+    (are [p x y] (= (all-matches (the-bytes p) (map the-bytes x)) y)
+         "aa" ["aaaaaaaaaaaaa"] [0 1 2 3 4 5 6 7 8 9 10 11]
+         "" ["abc"] [0 1 2 3]
+         "" ["ab" "cdef"] [0 1 2 3 4 5 6])))
