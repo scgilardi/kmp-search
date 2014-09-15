@@ -42,7 +42,9 @@
   ([matcher bytes]
      (search-bytes matcher bytes (alength bytes)))
   ([matcher ^bytes bytes ^long limit]
-     {:pre [(isa? byte-array-class (class bytes))]}
+     {:pre [(every? #(contains? matcher %) [:pattern :length :border :state])
+            (isa? byte-array-class (class bytes))
+            (<= limit (alength bytes))]}
      (let [{:keys [^bytes pattern ^long length ^longs border state]} matcher
            [offset i j] state
            [i j] (loop [^long i i ^long j j]
