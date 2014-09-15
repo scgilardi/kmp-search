@@ -33,13 +33,16 @@
 (deftest a-test
   (testing "failure generation"
     (are [x y] (= (seq (:failure (matcher (.getBytes x)))) y )
-         "abcdabd" [0 0 0 0 1 2 0]
+         "abcdabd" [-1 0 0 0 0 1 2 0]
+         "ababaa" [-1 0 0 1 2 3 1]
          "participate in parachute"
-         [0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 1 2 3 0 0 0 0 0 0]
+         [-1 0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 1 2 3 0 0 0 0 0 0]
          "ululation"
-         [0 0 1 2 0 0 0 0 0]
+         [-1 0 0 1 2 0 0 0 0 0]
          "rangerangles"
-         [0 0 0 0 0 1 2 3 4 0 0 0]))
+         [-1 0 0 0 0 0 1 2 3 4 0 0 0]
+         "aaaaaaaaaa"
+         [-1 0 1 2 3 4 5 6 7 8 9]))
   (testing "matches"
     (let [m (matcher (the-bytes "abc"))]
       (are [x y] (= (test-index m x) y)
@@ -57,11 +60,6 @@
            ["ab" "ca" "bc" "ab" "ca"] [0 3 6]
            ["ab" "ca" "bc" "ab" "cabraca" "abacab" "collate"] [0 3 6 19])))
   (testing "matching empty"
-    (let [m (matcher (the-bytes ""))]
-      (are [x y] (= (test-index m x) y)
-           "" 0
-           "rogue" 0
-           "abc" 0
-           "1abc" 0
-           "ababc" 0
-           ["ab" ""  "bd" "ab" "c"] 0))))
+    (let [m (matcher (the-bytes "aa"))]
+      (are [x y] (= (all-matches m (map the-bytes x)) y)
+           ["aaaaaaaaaaaaa"] [0 1 2 3 4 5 6 7 8 9 10 11]))))

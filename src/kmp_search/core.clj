@@ -7,27 +7,30 @@
 
   - search-bytes returns an updated matcher which carries enough state
     to allow matching across the boundary if the byte-array is a
-    portion of a larger search target."
+    portion of a larger search target.
+
+  reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm"
   (:require [clojure.java.io :as io]))
 
 (def byte-array-class (Class/forName "[B"))
 
 (defn matcher [^bytes pattern]
-  {:pre [(isa? byte-array-class (class pattern))]}
+  {:pre [(isa? byte-array-class (class pattern))
+         (pos? (alength pattern))]}
   (let [length (alength pattern)
-        failure (long-array length)]
-    (loop [i 1 j 0]
+        failure (long-array (inc length))]
+    (aset-long failure 0 -1)
+    (loop [i 0 j -1]
       (when (< i length)
         (let [b (aget pattern i)
               ^long j (loop [j j]
-                        (let [p (aget pattern j)]
-                          (if (and (pos? j) (not= p b))
-                            (recur (aget failure (dec j)))
-                            (if (= p b)
-                              (inc j)
-                              j))))]
+                        (if (and (not (neg? j))
+                                 (not= (aget pattern j) b))
+                          (recur (aget failure j))
+                          (inc j)))
+              i (inc i)]
           (aset-long failure i j)
-          (recur (inc i) j))))
+          (recur i j))))
     {:pattern pattern
      :length length
      :failure failure
@@ -44,25 +47,20 @@
   ([matcher ^bytes bytes ^long limit]
      {:pre [(isa? byte-array-class (class bytes))]}
      (let [{:keys [^bytes pattern ^long length ^longs failure state]} matcher
-           [offset i j] state
-           [i j] (if (= j length)
-                   [i j]
-                   (loop [i i ^long j j]
-                     (if (= i limit)
-                       [i j]
-                       (let [b (aget bytes i)
-                             ^long j (loop [j j]
-                                       (let [p (aget pattern j)]
-                                         (if (and (pos? j) (not= p b))
-                                           (recur (aget failure (dec j)))
-                                           (if (= p b)
-                                             (inc j)
-                                             j))))]
-                         (if (= j length)
-                           [(inc i) j]
-                           (recur (inc i) j))))))]
+           [^long offset ^long i ^long j] state
+           [i j] (loop [^long i i ^long j j]
+                   (if (or (= i limit) (= j length))
+                     [i j]
+                     (let [b (aget bytes i)
+                           ^long j (loop [j j]
+                                     (if (and (not (neg? j))
+                                              (not= (aget pattern j) b))
+                                       (recur (aget failure j))
+                                       (inc j)))
+                           i (inc i)]
+                       (recur i j))))]
        (if (= j length)
-         [(- (+ offset i) length) (assoc matcher :state [offset i 0])]
+         [(+ offset (- i j)) (assoc matcher :state [offset i (aget failure j)])]
          [nil (assoc matcher :state [(+ offset i) 0 j])]))))
 
 (defn search-file
