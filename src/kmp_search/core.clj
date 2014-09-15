@@ -15,8 +15,7 @@
 (def byte-array-class (Class/forName "[B"))
 
 (defn matcher [^bytes pattern]
-  {:pre [(isa? byte-array-class (class pattern))
-         (pos? (alength pattern))]}
+  {:pre [(isa? byte-array-class (class pattern))]}
   (let [length (alength pattern)
         failure (long-array (inc length))]
     (aset-long failure 0 -1)
@@ -47,7 +46,7 @@
   ([matcher ^bytes bytes ^long limit]
      {:pre [(isa? byte-array-class (class bytes))]}
      (let [{:keys [^bytes pattern ^long length ^longs failure state]} matcher
-           [^long offset ^long i ^long j] state
+           [offset i j] state
            [i j] (loop [^long i i ^long j j]
                    (if (or (= i limit) (= j length))
                      [i j]

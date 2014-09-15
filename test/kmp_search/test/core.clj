@@ -60,6 +60,15 @@
            ["ab" "ca" "bc" "ab" "ca"] [0 3 6]
            ["ab" "ca" "bc" "ab" "cabraca" "abacab" "collate"] [0 3 6 19])))
   (testing "matching empty"
+    (let [m (matcher (the-bytes ""))]
+      (are [x y] (= (test-index m x) y)
+           "" 0
+           "rogue" 0
+           "abc" 0
+           "1abc" 0
+           "ababc" 0
+           ["ab" ""  "bd" "ab" "c"] 0)))
+  (testing "matching empty"
     (let [m (matcher (the-bytes "aa"))]
       (are [x y] (= (all-matches m (map the-bytes x)) y)
            ["aaaaaaaaaaaaa"] [0 1 2 3 4 5 6 7 8 9 10 11]))))
