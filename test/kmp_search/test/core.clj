@@ -31,8 +31,8 @@
     index))
 
 (deftest a-test
-  (testing "failure generation"
-    (are [x y] (= (seq (:failure (matcher (.getBytes x)))) y )
+  (testing "border generation"
+    (are [x y] (= (seq (:border (matcher (.getBytes x)))) y )
          "abcdabd" [-1 0 0 0 0 1 2 0]
          "ababaa" [-1 0 0 1 2 3 1]
          "participate in parachute"

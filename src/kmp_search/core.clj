@@ -17,20 +17,20 @@
 (defn matcher [^bytes pattern]
   {:pre [(isa? byte-array-class (class pattern))]}
   (let [length (alength pattern)
-        failure (long-array (inc length))]
+        border (long-array (inc length))]
     (loop [i 0 j -1]
-      (aset-long failure i j)
+      (aset-long border i j)
       (when (< i length)
-        (let [b (aget pattern i)
+        (let [p (aget pattern i)
               ^long j (loop [j j]
                         (if (and (not (neg? j))
-                                 (not= (aget pattern j) b))
-                          (recur (aget failure j))
+                                 (not= (aget pattern j) p))
+                          (recur (aget border j))
                           j))]
           (recur (inc i) (inc j)))))
     {:pattern pattern
      :length length
-     :failure failure
+     :border border
      :state [0 0 0]}))
 
 (defn search-bytes
@@ -43,7 +43,7 @@
      (search-bytes matcher bytes (alength bytes)))
   ([matcher ^bytes bytes ^long limit]
      {:pre [(isa? byte-array-class (class bytes))]}
-     (let [{:keys [^bytes pattern ^long length ^longs failure state]} matcher
+     (let [{:keys [^bytes pattern ^long length ^longs border state]} matcher
            [offset i j] state
            [i j] (loop [^long i i ^long j j]
                    (if (or (= i limit) (= j length))
@@ -52,11 +52,11 @@
                            ^long j (loop [j j]
                                      (if (and (not (neg? j))
                                               (not= (aget pattern j) b))
-                                       (recur (aget failure j))
+                                       (recur (aget border j))
                                        j))]
                        (recur (inc i) (inc j)))))]
        (if (= j length)
-         [(+ offset (- i j)) (assoc matcher :state [offset i (aget failure j)])]
+         [(+ offset (- i j)) (assoc matcher :state [offset i (aget border j)])]
          [nil (assoc matcher :state [(+ offset i) 0 j])]))))
 
 (defn search-file
