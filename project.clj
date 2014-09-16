@@ -5,5 +5,4 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]]
   :global-vars {*warn-on-reflection* true}
-  :jvm-opts []
-  :java-source-paths ["src/main/java/"])
+  :jvm-opts [])
