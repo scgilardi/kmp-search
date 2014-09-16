@@ -45,7 +45,6 @@
            (<= limit (count bytes))]}
     (let [limit (int limit)
           [i j] (loop [i i j j]
-                  (prn i j)
                   (if (or (= i limit) (= j length))
                     [i j]
                     (let [b (aget ^bytes bytes i)
