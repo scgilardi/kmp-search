@@ -1,11 +1,11 @@
 (ns kmp-search.core
   "functions to search bytes for a byte pattern
 
-  - create a matcher with the bytes of the pattern
+  - create a context with the bytes of the pattern
 
-  - call a search function with the matcher and the bytes to be searched
+  - call a search function with the context and the bytes to be searched
 
-  - search-bytes returns an updated matcher which carries enough state
+  - search-bytes returns an updated context which carries enough state
     to allow matching across the boundary if the byte-array is a
     portion of a larger search target.
 
@@ -14,62 +14,56 @@
 
 (def byte-array-class (Class/forName "[B"))
 
-(defn matcher [^bytes pattern]
+(defprotocol SearchBytes
+  (search-bytes
+    [this bytes]
+    [this bytes limit]))
+
+(defrecord KMP
+    [^bytes pattern ^int length ^ints border ^long offset ^int i ^int j]
+  SearchBytes
+  (search-bytes [this bytes]
+    (search-bytes this bytes (count bytes)))
+  (search-bytes [this bytes limit]
+    {:pre [(isa? byte-array-class (class bytes))
+           (<= limit (count bytes))]}
+    (let [[i j] (loop [i i j j]
+                  (if (or (= i limit) (= j length))
+                    [i j]
+                    (let [b (aget ^bytes bytes i)
+                          j (int (loop [j j]
+                                   (if (or (neg? j) (= (aget pattern j) b))
+                                     j
+                                     (recur (aget border j)))))]
+                      (recur (inc i) (inc j)))))]
+      (if (= j length)
+        [(+ offset (- i j)) (assoc this :offset offset :i i :j (aget border j))]
+        [nil (assoc this :offset (+ offset i) :i 0 :j j)]))))
+
+(defn context [^bytes pattern]
   {:pre [(isa? byte-array-class (class pattern))]}
-  (let [length (alength pattern)
-        border (long-array (inc length))]
+  (let [length (count pattern)
+        border (int-array (inc length))]
     (loop [i 0 j -1]
-      (aset-long border i j)
+      (aset-int border i j)
       (when (< i length)
         (let [p (aget pattern i)
-              ^long j (loop [j j]
-                        (if (and (not (neg? j))
-                                 (not= (aget pattern j) p))
-                          (recur (aget border j))
-                          j))]
+              j (int (loop [j j]
+                       (if (or (neg? j) (= (aget pattern j) p))
+                         j
+                         (recur (aget border j)))))]
           (recur (inc i) (inc j)))))
-    {:pattern pattern
-     :length length
-     :border border
-     :state [0 0 0]}))
-
-(defn search-bytes
-  "searches some or all of a byte array. returns the index of the
-  first match (or nil if no match is found) and an updated matcher
-  that can be used to continue the search in a subsequent call.
-  matches within byte arrays or across byte array boundaries will
-  be found."
-  ([matcher bytes]
-     (search-bytes matcher bytes (alength bytes)))
-  ([matcher ^bytes bytes ^long limit]
-     {:pre [(every? #(contains? matcher %) [:pattern :length :border :state])
-            (isa? byte-array-class (class bytes))
-            (<= limit (alength bytes))]}
-     (let [{:keys [^bytes pattern ^long length ^longs border state]} matcher
-           [offset i j] state
-           [i j] (loop [^long i i ^long j j]
-                   (if (or (= i limit) (= j length))
-                     [i j]
-                     (let [b (aget bytes i)
-                           ^long j (loop [j j]
-                                     (if (and (not (neg? j))
-                                              (not= (aget pattern j) b))
-                                       (recur (aget border j))
-                                       j))]
-                       (recur (inc i) (inc j)))))]
-       (if (= j length)
-         [(+ offset (- i j)) (assoc matcher :state [offset i (aget border j)])]
-         [nil (assoc matcher :state [(+ offset i) 0 j])]))))
+    (->KMP pattern length border 0 0 0)))
 
 (defn search-file
   "returns the index of the first occurreence of a byte pattern in a
   file or nil if the pattern is not present."
   [^bytes pattern file & {:keys [buffer-size] :or {buffer-size 1024}}]
-  (let [bytes (byte-array buffer-size)]
+  (let [buffer (byte-array buffer-size)]
     (with-open [ins (io/input-stream file)]
-      (loop [m (matcher pattern)
-             read-count (.read ins bytes)]
+      (loop [c (context pattern)
+             read-count (.read ins buffer)]
         (if-not (neg? read-count)
-          (let [[index m] (search-bytes m bytes read-count)]
+          (let [[index c] (search-bytes c buffer read-count)]
             (or index
-                (recur m (.read ins bytes)))))))))
+                (recur c (.read ins buffer)))))))))

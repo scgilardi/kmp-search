@@ -7,19 +7,19 @@
 
 (defn all-matches
   [pattern byte-arrays]
-  (loop [matcher (matcher pattern)
+  (loop [context (context pattern)
          byte-arrays byte-arrays
          matches []]
     (if byte-arrays
-      (let [[index matcher] (search-bytes matcher (first byte-arrays))]
+      (let [[index context] (search-bytes context (first byte-arrays))]
         (if index
-          (recur matcher byte-arrays (conj matches index))
-          (recur matcher (next byte-arrays) matches)))
+          (recur context byte-arrays (conj matches index))
+          (recur context (next byte-arrays) matches)))
       matches)))
 
 (deftest a-test
   (testing "border generation"
-    (are [x y] (= (seq (:border (matcher (.getBytes x)))) y )
+    (are [x y] (= (seq (:border (context (.getBytes x)))) y )
          "abcdabd" [-1 0 0 0 0 1 2 0]
          "ababaa" [-1 0 0 1 2 3 1]
          "participate in parachute"
