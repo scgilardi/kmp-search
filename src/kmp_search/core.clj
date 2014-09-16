@@ -14,20 +14,38 @@
 
 (def byte-array-class (Class/forName "[B"))
 
-(defprotocol SearchBytes
-  (search-bytes
-    [this bytes]
-    [this bytes limit]))
+(defprotocol Search
+  (search
+    [this data]
+    [this data limit]))
+
+(defn border
+  [^bytes pattern]
+  {:pre [(isa? byte-array-class (class pattern))]}
+  (let [length (alength pattern)
+        border (int-array (inc length))]
+    (loop [i 0 j -1]
+      (aset-int border i j)
+      (when (< i length)
+        (let [p (aget pattern i)
+              j (int (loop [j j]
+                       (if (or (neg? j) (= (aget pattern j) p))
+                         j
+                         (recur (aget border j)))))]
+          (recur (inc i) (inc j)))))
+    border))
 
 (defrecord KMP
     [^bytes pattern ^int length ^ints border ^long offset ^int i ^int j]
-  SearchBytes
-  (search-bytes [this bytes]
-    (search-bytes this bytes (count bytes)))
-  (search-bytes [this bytes limit]
+  Search
+  (search [this bytes]
+    (search this bytes (count bytes)))
+  (search [this bytes limit]
     {:pre [(isa? byte-array-class (class bytes))
            (<= limit (count bytes))]}
-    (let [[i j] (loop [i i j j]
+    (let [limit (int limit)
+          [i j] (loop [i i j j]
+                  (prn i j)
                   (if (or (= i limit) (= j length))
                     [i j]
                     (let [b (aget ^bytes bytes i)
@@ -42,18 +60,7 @@
 
 (defn context [^bytes pattern]
   {:pre [(isa? byte-array-class (class pattern))]}
-  (let [length (count pattern)
-        border (int-array (inc length))]
-    (loop [i 0 j -1]
-      (aset-int border i j)
-      (when (< i length)
-        (let [p (aget pattern i)
-              j (int (loop [j j]
-                       (if (or (neg? j) (= (aget pattern j) p))
-                         j
-                         (recur (aget border j)))))]
-          (recur (inc i) (inc j)))))
-    (->KMP pattern length border 0 0 0)))
+  (->KMP pattern (count pattern) (border pattern) 0 0 0))
 
 (defn search-file
   "returns the index of the first occurreence of a byte pattern in a
@@ -64,6 +71,6 @@
       (loop [c (context pattern)
              read-count (.read ins buffer)]
         (if-not (neg? read-count)
-          (let [[index c] (search-bytes c buffer read-count)]
+          (let [[index c] (search c buffer read-count)]
             (or index
                 (recur c (.read ins buffer)))))))))

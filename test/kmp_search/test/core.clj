@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [kmp-search.core :refer :all]))
 
-(defn the-bytes [x]
+(defn the-bytes [^String x]
   (.getBytes x))
 
 (defn all-matches
@@ -11,7 +11,7 @@
          byte-arrays byte-arrays
          matches []]
     (if byte-arrays
-      (let [[index context] (search-bytes context (first byte-arrays))]
+      (let [[index context] (search context (first byte-arrays))]
         (if index
           (recur context byte-arrays (conj matches index))
           (recur context (next byte-arrays) matches)))
