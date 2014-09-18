@@ -40,18 +40,21 @@ public class Kernel
                 j = border[j];
         }
 
-        return (j == length) ? matched(i, j) : not_matched(i, j);
+        return (j == length) ? matched(i) : not_matched(i, j);
     }
 
-    public Object[] matched(int i, int j)
+    public Object[] matched(int i)
     {
-        long match = offset + i - j;
-        return new Object[] {match, new Kernel(this, offset, i, border[j])};
+        Object match = offset + i - pattern.length;
+        int j = border[pattern.length];
+        return new Object[] {match, new Kernel(this, offset, i, j)};
     }
 
     public Object[] not_matched(int i, int j)
     {
-        return new Object[] {null, new Kernel(this, offset + i, 0, j)};
+        Object match = null;
+        long offset = this.offset + i;
+        return new Object[] {match, new Kernel(this, offset, 0, j)};
     }
 
     static public int[] border(byte[] pattern)
