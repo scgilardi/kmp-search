@@ -19,7 +19,7 @@
 
 (deftest a-test
   (testing "border generation"
-    (are [x y] (= (seq (:border (context (.getBytes x)))) y )
+    (are [x y] (= (seq (border (.getBytes x))) y )
          "abcdabd" [-1 0 0 0 0 1 2 0]
          "ababaa" [-1 0 0 1 2 3 1]
          "participate in parachute"

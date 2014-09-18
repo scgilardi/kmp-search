@@ -10,7 +10,8 @@
     portion of a larger search target.
 
   reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm"
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io])
+  (:import (kmp_search Kernel)))
 
 (def byte-array-class (Class/forName "[B"))
 
@@ -57,9 +58,21 @@
         [(+ offset (- i j)) (assoc this :offset offset :i i :j (aget border j))]
         [nil (assoc this :offset (+ offset i) :i 0 :j j)]))))
 
-(defn context [^bytes pattern]
+(extend-type Kernel
+  Search
+  (search
+    ([this data]
+       (search this data (count data)))
+    ([this data limit]
+       (.search this data limit))))
+
+(defn _context [^bytes pattern]
   {:pre [(isa? byte-array-class (class pattern))]}
   (->KMP pattern (count pattern) (border pattern) 0 0 0))
+
+(defn context [^bytes pattern]
+  {:pre [(isa? byte-array-class (class pattern))]}
+  (Kernel. pattern))
 
 (defn search-file
   "returns the index of the first occurreence of a byte pattern in a
