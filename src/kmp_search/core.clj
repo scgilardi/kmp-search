@@ -9,6 +9,8 @@
     to allow matching across the boundary if the byte-array is a
     portion of a larger search target.
 
+  - see search-file for an example
+
   reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm"
   (:require [clojure.java.io :as io])
   (:import (kmp_search Kernel)))
