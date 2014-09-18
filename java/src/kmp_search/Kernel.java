@@ -35,7 +35,8 @@ public class Kernel
         int length = pattern.length;
 
         for (; i < limit && j < length; ++i, ++j) {
-            while (j != -1 && data[i] != pattern[j])
+            byte b = data[i];
+            while (j != -1 && pattern[j] != b)
                 j = border[j];
         }
 
@@ -57,12 +58,12 @@ public class Kernel
     {
         int length = pattern.length;
         int[] border = new int[length + 1];
-        int i = 0;
-        int j = -1;
+        int i, j;
 
-        for (; i < length; ++i, ++j) {
+        for (i = 0, j = -1; i < length; ++i, ++j) {
             border[i] = j;
-            while (j >= 0 && pattern[i] != pattern[j])
+            byte b = pattern [i];
+            while (j != -1 && pattern[j] != b)
                 j = border[j];
         }
         border[i] = j;

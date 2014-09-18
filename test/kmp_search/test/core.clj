@@ -18,18 +18,6 @@
       matches)))
 
 (deftest a-test
-  (testing "border generation"
-    (are [x y] (= (seq (border (.getBytes x))) y )
-         "abcdabd" [-1 0 0 0 0 1 2 0]
-         "ababaa" [-1 0 0 1 2 3 1]
-         "participate in parachute"
-         [-1 0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 1 2 3 0 0 0 0 0 0]
-         "ululation"
-         [-1 0 0 1 2 0 0 0 0 0]
-         "rangerangles"
-         [-1 0 0 0 0 0 1 2 3 4 0 0 0]
-         "aaaaaaaaaa"
-         [-1 0 1 2 3 4 5 6 7 8 9]))
   (testing "matching"
     (are [p x y] (= (all-matches (the-bytes p) (map the-bytes x)) y)
          "" [""] [0]
