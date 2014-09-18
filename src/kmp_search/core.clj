@@ -20,6 +20,16 @@
     [this data]
     [this data limit]))
 
+(defmacro match-length
+  [data i pattern j border]
+  `(let [b# (aget ~data ~i)]
+     (-> (loop [~j ~j]
+           (if (or (neg? ~j) (= (aget ~pattern ~j) b#))
+             ~j
+             (recur (aget ~border ~j))))
+         (int)
+         (inc))))
+
 (defn border
   [^bytes pattern]
   {:pre [(isa? byte-array-class (class pattern))]}
@@ -28,34 +38,25 @@
     (loop [i 0 j -1]
       (aset-int border i j)
       (when (< i length)
-        (let [p (aget pattern i)
-              j (int (loop [j j]
-                       (if (or (neg? j) (= (aget pattern j) p))
-                         j
-                         (recur (aget border j)))))]
-          (recur (inc i) (inc j)))))
+        (recur (inc i) (match-length pattern i pattern j border))))
     border))
 
 (defrecord KMP
     [^bytes pattern ^int length ^ints border ^long offset ^int i ^int j]
   Search
-  (search [this bytes]
-    (search this bytes (count bytes)))
-  (search [this bytes limit]
-    {:pre [(isa? byte-array-class (class bytes))
-           (<= limit (count bytes))]}
-    (let [limit (int limit)
+  (search [this data]
+    (search this data (count data)))
+  (search [this data limit]
+    {:pre [(isa? byte-array-class (class data))
+           (<= limit (count data))]}
+    (let [data (bytes data)
+          limit (int limit)
           [i j] (loop [i i j j]
-                  (if (or (= i limit) (= j length))
-                    [i j]
-                    (let [b (aget ^bytes bytes i)
-                          j (int (loop [j j]
-                                   (if (or (neg? j) (= (aget pattern j) b))
-                                     j
-                                     (recur (aget border j)))))]
-                      (recur (inc i) (inc j)))))]
+                  (if (and (< i limit) (< j length))
+                    (recur (inc i) (match-length data i pattern j border))
+                    [i j]))]
       (if (= j length)
-        [(+ offset (- i j)) (assoc this :offset offset :i i :j (aget border j))]
+        [(+ offset (- i j)) (assoc this :i i :j (aget border j))]
         [nil (assoc this :offset (+ offset i) :i 0 :j j)]))))
 
 (extend-type Kernel
