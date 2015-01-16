@@ -10,7 +10,7 @@
     - finds a match within a buffer, or
     - exhausts a buffer without finding a match
 
-  - retrieve the result a search from the new context using the
+  - retrieve the search result from the new context using the
     match function. The result is either:
 
       - if a match was found, a Long containing the offset of the
