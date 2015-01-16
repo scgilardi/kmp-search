@@ -77,5 +77,7 @@
 ;; [10 113 148]
 ;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 3)
 ;; [10 113 148]
+;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 13)
+;; [10 113 148]
 ;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 71)
 ;; [10 113 148]
