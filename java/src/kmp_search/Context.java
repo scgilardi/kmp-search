@@ -33,8 +33,10 @@ public class Context
 
     public Context search(byte[] data, int limit)
     {
+        long offset = this.offset;
         int i = this.i;
         int j = this.j;
+        Object match = null;
         int length = pattern.length;
 
         for (; i < limit && j < length; ++i, ++j) {
@@ -43,19 +45,16 @@ public class Context
                 j = border[j];
         }
 
-        return (j == length) ? matched(i) : not_matched(i, j);
-    }
+        if (j == length) {
+            j = border[pattern.length];
+            match = offset + i - pattern.length;
+        }
+        else {
+            offset += i;
+            i = 0;
+        }
 
-    public Context matched(int i)
-    {
-        int j = border[pattern.length];
-        return new Context(this, offset, i, j, offset + i - pattern.length);
-    }
-
-    public Context not_matched(int i, int j)
-    {
-        long offset = this.offset + i;
-        return new Context(this, offset, 0, j, null);
+        return new Context(this, offset, i, j, match);
     }
 
     public Object match ()
