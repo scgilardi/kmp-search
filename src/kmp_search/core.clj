@@ -1,15 +1,31 @@
 (ns kmp-search.core
-  "functions to search bytes for a byte pattern
+  "functions to search a byte stream for a byte pattern
 
-  - create a context with the bytes of the pattern
+  - create a context with the byte pattern
 
-  - call a search function with the context and the bytes to be searched
+  - call the search function repeatedly to process each sequential
+    buffer of stream contents
 
-  - search-bytes returns an updated context which carries enough state
-    to allow matching across the boundary if the byte-array is a
-    portion of a larger search target.
+  - each call to search returns a new context when it:
+    - finds a match within a buffer, or
+    - exhausts a buffer without finding a match
 
-  - see search-file for an example
+  - retrieve the result a search from the new context using the
+    match function. The result is either:
+
+      - if a match was found, a Long containing the offset of the
+        match within the stream of bytes processed, or
+
+      - if no match was not found, nil
+
+  - each returned context also contains enough state to allow matching
+    across buffer boundaries
+
+  - to find all matches, call search on each buffer repeatedly until
+    match returns nil, then continue searching the next buffer
+
+    - the context for each call to search will be the context returned
+      by the previous call
 
   reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm"
   (:require [clojure.java.io :as io])
