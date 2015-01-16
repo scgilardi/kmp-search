@@ -13,23 +13,28 @@
 
   reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm"
   (:require [clojure.java.io :as io])
-  (:import (kmp_search Kernel)))
+  (:import (kmp_search Context)))
 
 (defprotocol Search
   (search
     [this data]
-    [this data limit]))
+    [this data limit])
+  (match
+    [this]))
 
-(extend-type Kernel
+(extend-type Context
   Search
   (search
     ([this data]
-       (search this data (count data)))
+     (search this data (count data)))
     ([this data limit]
-       (vec (.search this data limit)))))
+     (.search this data limit)))
+  (match
+    [this]
+    (.match this)))
 
 (defn context [^bytes pattern]
-  (Kernel. pattern))
+  (Context. pattern))
 
 (defn search-file
   "returns the index of the first occurreence of a byte pattern in a
@@ -40,6 +45,6 @@
       (loop [c (context pattern)
              read-count (.read ins buffer)]
         (if-not (neg? read-count)
-          (let [[index c] (search c buffer read-count)]
-            (or index
+          (let [c (search c buffer read-count)]
+            (or (match c)
                 (recur c (.read ins buffer)))))))))

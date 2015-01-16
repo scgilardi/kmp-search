@@ -2,33 +2,36 @@ package kmp_search;
 
 // reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm
 
-public class Kernel
+public class Context
 {
     public final byte[] pattern;
     public final int[] border;
     public final long offset;
     public final int i;
     public final int j;
+    public final Object match;
 
-    public Kernel(byte[] pattern)
+    public Context(byte[] pattern)
     {
         this.pattern = pattern;
         this.border = border(pattern);
         this.offset = 0;
         this.i = 0;
         this.j = 0;
+        this.match = null;
     }
 
-    public Kernel(Kernel k, long offset, int i, int j)
+    public Context(Context k, long offset, int i, int j, Object match)
     {
         this.pattern = k.pattern;
         this.border = k.border;
         this.offset = offset;
         this.i = i;
         this.j = j;
+        this.match = match;
     }
 
-    public Object[] search(byte[] data, int limit)
+    public Context search(byte[] data, int limit)
     {
         int i = this.i;
         int j = this.j;
@@ -43,18 +46,21 @@ public class Kernel
         return (j == length) ? matched(i) : not_matched(i, j);
     }
 
-    public Object[] matched(int i)
+    public Context matched(int i)
     {
-        Object match = offset + i - pattern.length;
         int j = border[pattern.length];
-        return new Object[] {match, new Kernel(this, offset, i, j)};
+        return new Context(this, offset, i, j, offset + i - pattern.length);
     }
 
-    public Object[] not_matched(int i, int j)
+    public Context not_matched(int i, int j)
     {
-        Object match = null;
         long offset = this.offset + i;
-        return new Object[] {match, new Kernel(this, offset, 0, j)};
+        return new Context(this, offset, 0, j, null);
+    }
+
+    public Object match ()
+    {
+        return match;
     }
 
     static public int[] border(byte[] pattern)

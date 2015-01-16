@@ -11,9 +11,10 @@
          byte-arrays byte-arrays
          matches []]
     (if byte-arrays
-      (let [[index context] (search context (first byte-arrays))]
-        (if index
-          (recur context byte-arrays (conj matches index))
+      (let [context (search context (first byte-arrays))
+            match (match context)]
+        (if match
+          (recur context byte-arrays (conj matches match))
           (recur context (next byte-arrays) matches)))
       matches)))
 
