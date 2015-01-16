@@ -33,18 +33,18 @@
 
 (defprotocol Search
   (search
-    [this data]
-    [this data limit])
+    [this buffer]
+    [this buffer limit])
   (match
     [this]))
 
 (extend-type Context
   Search
   (search
-    ([this data]
-     (search this data (count data)))
-    ([this data limit]
-     (.search this data limit)))
+    ([this buffer]
+     (search this buffer (count buffer)))
+    ([this buffer limit]
+     (.search this buffer limit)))
   (match
     [this]
     (.match this)))
