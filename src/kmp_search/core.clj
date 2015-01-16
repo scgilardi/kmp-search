@@ -53,14 +53,29 @@
   (Context. pattern))
 
 (defn search-file
-  "returns the index of the first occurreence of a byte pattern in a
-  file or nil if the pattern is not present."
+  "returns a vector containing all the offsets where a byte pattern
+  appears within a file"
   [^bytes pattern file & {:keys [buffer-size] :or {buffer-size 1024}}]
   (let [buffer (byte-array buffer-size)]
     (with-open [ins (io/input-stream file)]
-      (loop [c (context pattern)
-             read-count (.read ins buffer)]
-        (if-not (neg? read-count)
-          (let [c (search c buffer read-count)]
-            (or (match c)
-                (recur c (.read ins buffer)))))))))
+      (loop [context (context pattern)
+             read-count (.read ins buffer)
+             matches []]
+        (if (neg? read-count)
+          matches
+          (let [new-context (search context buffer read-count)
+                match (match new-context)]
+            (if match
+              (recur new-context read-count (conj matches match))
+              (recur new-context (.read ins buffer) matches))))))))
+
+;; > (search-file (.getBytes "local") "/etc/hosts")
+;; [10 113 148]
+;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 1)
+;; [10 113 148]
+;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 2)
+;; [10 113 148]
+;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 3)
+;; [10 113 148]
+;; > (search-file (.getBytes "local") "/etc/hosts" :buffer-size 71)
+;; [10 113 148]
