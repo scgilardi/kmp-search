@@ -63,9 +63,8 @@
              matches []]
         (if (neg? read-count)
           matches
-          (let [new-context (search context buffer read-count)
-                match (match new-context)]
-            (if match
+          (let [new-context (search context buffer read-count)]
+            (if-let [match (match new-context)]
               (recur new-context read-count (conj matches match))
               (recur new-context (.read ins buffer) matches))))))))
 
