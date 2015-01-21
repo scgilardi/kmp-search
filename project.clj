@@ -1,4 +1,4 @@
-(defproject kmp-search "0.1.0"
+(defproject kmp-search "0.1.1-SNAPSHOT"
   :description "search a byte stream for a byte pattern"
   :url "http://github.com/scgilardi/kmp-search"
   :license {:name "Eclipse Public License 1.0"
