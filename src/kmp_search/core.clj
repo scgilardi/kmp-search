@@ -27,6 +27,8 @@
     - the context for each call to search will be the context returned
       by the previous call
 
+  - search-file is useful both in its own right and as an example
+
   reference: http://www.inf.fh-flensburg.de/lang/algorithmen/pattern/kmpen.htm"
   (:require [clojure.java.io :as io])
   (:import (kmp_search Context)))
