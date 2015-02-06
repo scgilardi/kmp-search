@@ -1,7 +1,7 @@
 # kmp-search
 
-Uses a streaming-compabible version of the Knuth-Morris-Pratt
-aglorithm to search a byte stream for a byte pattern. The stream is
+Uses a streaming-compatible version of the Knuth-Morris-Pratt
+algorithm to search a byte stream for a byte pattern. The stream is
 presented to a search context object as a succession of calls to
 process buffers one at a time. The matching is correct independent of
 the position of any buffer boundaries.

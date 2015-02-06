@@ -16,7 +16,7 @@
       - if a match was found, a Long containing the offset of the
         match within the stream of bytes processed, or
 
-      - if no match was not found, nil
+      - if no match was found, nil
 
   - each returned context also contains enough state to allow matching
     across buffer boundaries
