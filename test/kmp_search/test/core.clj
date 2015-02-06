@@ -33,7 +33,6 @@
          "abc" [""] []
          "abc" ["rogue"] []
          "abc" ["abc"] [0]
-         "abc" ["abc"] [0]
          "abc" ["1abc"] [1]
          "abc" ["ababc"] [2]
          "abc" ["ab" ""  "bd" "ab" "c"] [4]
