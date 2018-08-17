@@ -62,6 +62,11 @@ public class Context
         return match;
     }
 
+    public Context focus (final Context k)
+    {
+        return new Context(this, k.offset, k.i, 0, null);
+    }
+
     static public int[] border (final byte[] pattern)
     {
         final int length = pattern.length;

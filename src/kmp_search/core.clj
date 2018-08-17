@@ -21,6 +21,10 @@
   - each returned context also contains enough state to allow matching
     across buffer boundaries
 
+  - to begin searching for a new pattern starting at the position in
+    the stream held by a previous context, call the focus function on
+    the new context, passing in the previous context
+
   - to find all matches, call search on each buffer repeatedly until
     match returns nil, then continue searching the next buffer
 
@@ -38,7 +42,9 @@
     [this buffer]
     [this buffer limit])
   (match
-    [this]))
+    [this])
+  (focus
+    [this ctx]))
 
 (extend-type Context
   Search
@@ -49,9 +55,15 @@
      (.search this buffer limit)))
   (match
     [this]
-    (.match this)))
+    (.match this))
+  (focus
+    [this ctx]
+    (.focus this ctx)))
 
-(defn context [^bytes pattern]
+(defn context
+  "returns a new context ready to match the bytes in pattern at the
+  beginning of a stream"
+  [^bytes pattern]
   (Context. pattern))
 
 (defn search-file
