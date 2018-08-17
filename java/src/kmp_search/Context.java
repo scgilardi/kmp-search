@@ -11,7 +11,7 @@ public class Context
     public final int j;
     public final Long match;
 
-    public Context(byte[] pattern)
+    public Context (byte[] pattern)
     {
         this.pattern = pattern;
         this.border = border(pattern);
@@ -21,7 +21,7 @@ public class Context
         this.match = null;
     }
 
-    public Context(final Context k, long offset, int i, int j, Long match)
+    public Context (final Context k, long offset, int i, int j, Long match)
     {
         this.pattern = k.pattern;
         this.border = k.border;
@@ -31,7 +31,7 @@ public class Context
         this.match = match;
     }
 
-    public Context search(final byte[] data, int limit)
+    public Context search (final byte[] data, int limit)
     {
         final int length = this.pattern.length;
         long offset = this.offset;
@@ -62,7 +62,7 @@ public class Context
         return match;
     }
 
-    static public int[] border(final byte[] pattern)
+    static public int[] border (final byte[] pattern)
     {
         final int length = pattern.length;
         int[] border = new int[length + 1];
