@@ -9,7 +9,7 @@ public class Context
     public final long offset;
     public final int i;
     public final int j;
-    public final Long match;
+    public final Long end;
 
     public Context (byte[] pattern)
     {
@@ -18,17 +18,17 @@ public class Context
         this.offset = 0;
         this.i = 0;
         this.j = 0;
-        this.match = null;
+        this.end = null;
     }
 
-    public Context (final Context k, long offset, int i, int j, Long match)
+    public Context (final Context k, long offset, int i, int j, Long end)
     {
         this.pattern = k.pattern;
         this.border = k.border;
         this.offset = offset;
         this.i = i;
         this.j = j;
-        this.match = match;
+        this.end = end;
     }
 
     public Context search (final byte[] data, int limit)
@@ -37,7 +37,7 @@ public class Context
         long offset = this.offset;
         int i = this.i;
         int j = this.j;
-        Long match = null;
+        Long end = null;
 
         for (; i < limit && j < length; ++i, ++j) {
             byte b = data[i];
@@ -47,24 +47,44 @@ public class Context
 
         if (j == length) {
             j = border[j];
-            match = offset + i - length;
+            end = offset + i;
         }
         else {
             offset += i;
             i = 0;
         }
 
-        return new Context(this, offset, i, j, match);
+        return new Context(this, offset, i, j, end);
     }
 
-    public Long match ()
+    public Context search (final byte[] data)
     {
-        return match;
+        return search (data, data.length);
+    }
+
+    public Long offset ()
+    {
+        return offset;
+    }
+
+    public Long start ()
+    {
+        return end == null ? null : end - this.pattern.length;
+    }
+
+    public Long end ()
+    {
+        return end;
     }
 
     public Context focus (final Context k)
     {
         return new Context(this, k.offset, k.i, 0, null);
+    }
+
+    public Context reset ()
+    {
+        return new Context(this, 0, 0, 0, null);
     }
 
     static public int[] border (final byte[] pattern)
