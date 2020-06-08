@@ -11,10 +11,11 @@
     - exhausts a buffer without finding a match
 
   - retrieve the search result from the new context using the
-    match function. The result is either:
+    start or end functions. The result is either:
 
       - if a match was found, a Long containing the offset of the
-        match within the stream of bytes processed, or
+        start or end of the match within the entire stream of bytes
+        processed by the context, or
 
       - if no match was found, nil
 
@@ -37,29 +38,6 @@
   (:require [clojure.java.io :as io])
   (:import (kmp_search Context)))
 
-(defprotocol Search
-  (search
-    [this buffer]
-    [this buffer limit])
-  (match
-    [this])
-  (focus
-    [this ctx]))
-
-(extend-type Context
-  Search
-  (search
-    ([this buffer]
-     (search this buffer (count buffer)))
-    ([this buffer limit]
-     (.search this buffer limit)))
-  (match
-    [this]
-    (.match this))
-  (focus
-    [this ctx]
-    (.focus this ctx)))
-
 (defn context
   "returns a new context ready to match the bytes in pattern at the
   beginning of a stream"
@@ -72,13 +50,13 @@
   [^bytes pattern file & {:keys [buffer-size] :or {buffer-size 1024}}]
   (let [buffer (byte-array buffer-size)]
     (with-open [ins (io/input-stream file)]
-      (loop [context (context pattern)
+      (loop [^ Context context (context pattern)
              read-count (.read ins buffer)
              matches []]
         (if (neg? read-count)
           matches
-          (let [new-context (search context buffer read-count)]
-            (if-let [match (match new-context)]
+          (let [new-context (.search context buffer read-count)]
+            (if-let [match (.start new-context)]
               (recur new-context read-count (conj matches match))
               (recur new-context (.read ins buffer) matches))))))))
 

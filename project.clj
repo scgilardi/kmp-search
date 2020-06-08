@@ -8,4 +8,4 @@
   :global-vars {*warn-on-reflection* true}
   :java-source-paths ["src/java"]
   :jvm-opts []
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.9.0"]]}})
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]]}})
