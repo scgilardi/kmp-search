@@ -6,6 +6,5 @@
             :distribution :repo}
   :deploy-repositories [["releases" :clojars]]
   :global-vars {*warn-on-reflection* true}
-  :java-source-paths ["src/java"]
   :jvm-opts []
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]]}})
