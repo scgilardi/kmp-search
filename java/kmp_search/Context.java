@@ -9,7 +9,7 @@ public class Context
     public final long position;
     public final int i;
     public final int j;
-    public final Long end;
+    public final Long match;
 
     public Context (byte[] pattern)
     {
@@ -18,43 +18,43 @@ public class Context
         this.position = 0;
         this.i = 0;
         this.j = 0;
-        this.end = null;
+        this.match = null;
     }
 
-    public Context (final Context k, long position, int i, int j, Long end)
+    public Context (final Context k, long position, int i, int j, Long match)
     {
         this.pattern = k.pattern;
         this.border = k.border;
         this.position = position;
         this.i = i;
         this.j = j;
-        this.end = end;
+        this.match = match;
     }
 
-    public Context search (final byte[] data, int offset, int limit)
+    public Context search (final byte[] data, int start, int end)
     {
         final int length = this.pattern.length;
         long position = this.position;
         int i = this.i;
         int j = this.j;
-        Long end = null;
+        Long match = null;
 
-        for (; offset + i < limit && j < length; ++i, ++j) {
-            byte b = data[offset + i];
+        for (; start + i < end && j < length; ++i, ++j) {
+            byte b = data[start + i];
             while (j != -1 && pattern[j] != b)
                 j = border[j];
         }
 
         if (j == length) {
             j = border[j];
-            end = position + i;
+            match = position + i;
         }
         else {
             position += i;
             i = 0;
         }
 
-        return new Context(this, position, i, j, end);
+        return new Context(this, position, i, j, match);
     }
 
     public Context search (final byte[] data)
@@ -69,12 +69,12 @@ public class Context
 
     public Long start ()
     {
-        return end == null ? null : end - this.pattern.length;
+        return match == null ? null : match - this.pattern.length;
     }
 
     public Long end ()
     {
-        return end;
+        return match;
     }
 
     public Context focus (final Context k)
