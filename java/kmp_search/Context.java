@@ -6,7 +6,7 @@ public class Context
 {
     public final byte[] pattern;
     public final int[] border;
-    public final long offset;
+    public final long position;
     public final int i;
     public final int j;
     public final Long end;
@@ -15,56 +15,56 @@ public class Context
     {
         this.pattern = pattern;
         this.border = border(pattern);
-        this.offset = 0;
+        this.position = 0;
         this.i = 0;
         this.j = 0;
         this.end = null;
     }
 
-    public Context (final Context k, long offset, int i, int j, Long end)
+    public Context (final Context k, long position, int i, int j, Long end)
     {
         this.pattern = k.pattern;
         this.border = k.border;
-        this.offset = offset;
+        this.position = position;
         this.i = i;
         this.j = j;
         this.end = end;
     }
 
-    public Context search (final byte[] data, int limit)
+    public Context search (final byte[] data, int offset, int limit)
     {
         final int length = this.pattern.length;
-        long offset = this.offset;
+        long position = this.position;
         int i = this.i;
         int j = this.j;
         Long end = null;
 
-        for (; i < limit && j < length; ++i, ++j) {
-            byte b = data[i];
+        for (; offset + i < limit && j < length; ++i, ++j) {
+            byte b = data[offset + i];
             while (j != -1 && pattern[j] != b)
                 j = border[j];
         }
 
         if (j == length) {
             j = border[j];
-            end = offset + i;
+            end = position + i;
         }
         else {
-            offset += i;
+            position += i;
             i = 0;
         }
 
-        return new Context(this, offset, i, j, end);
+        return new Context(this, position, i, j, end);
     }
 
     public Context search (final byte[] data)
     {
-        return search (data, data.length);
+        return search (data, 0, data.length);
     }
 
-    public Long offset ()
+    public Long position ()
     {
-        return offset;
+        return position;
     }
 
     public Long start ()
@@ -79,7 +79,7 @@ public class Context
 
     public Context focus (final Context k)
     {
-        return new Context(this, k.offset, k.i, 0, null);
+        return new Context(this, k.position, k.i, 0, null);
     }
 
     public Context reset ()

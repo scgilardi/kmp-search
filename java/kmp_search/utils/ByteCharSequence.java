@@ -1,7 +1,5 @@
 package kmp_search.utils;
 
-import java.util.Arrays;
-
 // reference: http://blog.sarah-happy.ca/2013/01/java-regular-expression-on-byte-array.html
 
 public class ByteCharSequence implements CharSequence {
